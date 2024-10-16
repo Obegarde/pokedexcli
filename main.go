@@ -57,7 +57,7 @@ func getInput() (string, error){
 
 func commandHelp(_ *pokeapi.Client) error{
 	fmt.Println("Welcome to the Pokedex!")
-	fmt.Printf("Usage: \n\n help: Displays a help message\n exit: Exit the Pokedex")
+	fmt.Printf("Usage: \n\n help: Displays a help message\n exit: Exit the Pokedex\n map: Display 20 locations or 20 next locations\n mapb: Display previous 20 locations\n")
 	return nil
 }
 
@@ -118,6 +118,8 @@ func main(){
 	fmt.Printf("New Client Error: %s", err)
 	return
 	}
+	
+
 
 
 	for{

@@ -1,6 +1,7 @@
 package pokeapi
 import (
-	"net/http"	
+	"net/http"
+	
 )
 
 
@@ -18,6 +19,6 @@ type Client struct{
 	baseUrl string
 	baseClient *http.Client
 	LastResponse PokeResponse 	
-
+	Cache	*PokeCache 
 
 }
