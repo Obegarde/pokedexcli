@@ -6,6 +6,7 @@ import(
 	"io"
 	"encoding/json"
 	"sync"
+	"math/rand"
 )
 
 
@@ -20,6 +21,7 @@ func NewClient() (*Client, error){
 		baseClient: &http.Client{
 		Timeout: time.Second * 10,
 	},
+		CaughtPokemon: make(map[string][]byte),
 	
 }
 	return c, nil
@@ -124,6 +126,97 @@ func GetPreviousLocationAreas(c *Client)error{
 	return err
 	}
 	err = c.Cache.Add(previousURL, data)
+		if err != nil{
+		return err
+		}
+	}
+	return nil
+}
+
+func CatchPokemon(c *Client)error{
+	lastPokemonName := c.LastPokemonResponse.Name
+	pokemonExperience := c.LastPokemonResponse.BaseExperience
+	fmt.Println("Throwing a pokeball at " + lastPokemonName + "...")
+	if (rand.Float32()* 1000) > float32(pokemonExperience){
+	 fmt.Println(lastPokemonName + " has been caught!")
+	cachedPokemonEntry, exists := c.Cache.Get("https://pokeapi.co/api/v2/pokemon/"+lastPokemonName)
+		if !exists{
+		return fmt.Errorf("Error: Pokemon not found in cache")
+		}
+	c.CaughtPokemon[lastPokemonName] = cachedPokemonEntry.val
+	return nil
+	}
+	fmt.Println(lastPokemonName+" escaped!")
+	return nil
+}
+
+
+func GetPokemon(c *Client, pokemon string)error{
+	pokemonURL := "https://pokeapi.co/api/v2/pokemon/" + pokemon
+	entry, exists := c.Cache.Get(pokemonURL)
+	if exists{
+		err := json.Unmarshal(entry.val, &c.LastPokemonResponse)
+	
+	if err != nil{
+	return err
+	}
+	}else{
+	req, err := http.NewRequest("GET",pokemonURL,nil)	
+	if err != nil{
+	return err
+	}
+
+	resp, err := c.baseClient.Do(req)
+	if err != nil{
+	return err
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil{
+	return err 
+	}
+	err = json.Unmarshal(data,&c.LastPokemonResponse)
+	if err != nil{
+	return err
+	}
+	err = c.Cache.Add(pokemonURL, data)
+		if err != nil{
+		return err
+		}
+	}
+	return nil
+}
+
+
+
+func ExploreLocation(c *Client, name string)error{
+	ExploreURL := "https://pokeapi.co/api/v2/location-area/" + name
+	entry, exists := c.Cache.Get(ExploreURL)
+	if exists{	
+		err := json.Unmarshal(entry.val,&c.LastExploreResponse)
+	if err != nil{
+	return err
+	}	
+	}else{
+	
+
+	req, err := http.NewRequest("GET",ExploreURL,nil)
+	if err != nil{
+	return err
+	}
+
+	resp, err := c.baseClient.Do(req)
+	if err != nil{
+	return err
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil{
+	return err 
+	}
+	err = json.Unmarshal(data,&c.LastExploreResponse)
+	if err != nil{
+	return err
+	}
+	err = c.Cache.Add(ExploreURL, data)
 		if err != nil{
 		return err
 		}
